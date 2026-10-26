@@ -1,0 +1,25 @@
+{
+  "name": "internship-rest-api",
+  "version": "1.0.0",
+  "description": "Beginner-friendly Internship Management REST API (Express + SQLite)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "init-db": "node -e \"require('./database/db').getDb(); console.log('Database ready')\"",
+    "seed": "node database/seed.js",
+    "test": "jest --runInBand"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "supertest": "^7.3.1"
+  }
+}
