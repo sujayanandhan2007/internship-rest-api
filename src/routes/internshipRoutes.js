@@ -4,6 +4,7 @@ const { validateId, validateBody, validateQuery } = require('../validators/inter
 
 router.get('/', validateQuery, c.list);
 router.post('/', validateBody(false), c.create);
+router.get('/filters', c.filters); // must stay above '/:id'
 router.get('/:id', validateId, c.get);
 router.put('/:id', validateId, validateBody(true), c.update);
 router.delete('/:id', validateId, c.remove);

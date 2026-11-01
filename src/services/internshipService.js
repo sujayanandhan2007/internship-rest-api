@@ -13,7 +13,11 @@ function list({ search, domain, mode, location, page, limit }) {
   const db = getDb();
   const where = [];
   const params = [];
-  if (search) { where.push("title LIKE ? ESCAPE '\\'"); params.push(`%${escapeLike(search)}%`); } // case-insensitive (ASCII)
+  if (search) { // case-insensitive (ASCII) match on id, title, domain, mode, location or skills
+    const cols = ['id', 'title', 'domain', 'mode', 'location', 'skills'];
+    where.push(`(${cols.map((c) => `${c} LIKE ? ESCAPE '\\'`).join(' OR ')})`);
+    for (let i = 0; i < cols.length; i++) params.push(`%${escapeLike(search)}%`);
+  }
   if (domain) { where.push('domain = ? COLLATE NOCASE'); params.push(domain); }
   if (mode) { where.push('mode = ? COLLATE NOCASE'); params.push(mode); }
   if (location) { where.push('location = ? COLLATE NOCASE'); params.push(location); }
@@ -24,6 +28,12 @@ function list({ search, domain, mode, location, page, limit }) {
     .prepare(`SELECT ${COLS} FROM internships ${clause} ORDER BY id ASC LIMIT ? OFFSET ?`)
     .all(...params, limit, (page - 1) * limit);
   return { data: rows.map(toApi), pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+}
+
+function filters() {
+  const db = getDb();
+  const uniq = (col) => db.prepare(`SELECT DISTINCT ${col} AS v FROM internships ORDER BY v`).all().map((r) => r.v);
+  return { domains: uniq('domain'), modes: uniq('mode') };
 }
 
 function getById(id) {
@@ -62,4 +72,4 @@ function remove(id) {
   return { id, deleted: true };
 }
 
-module.exports = { list, getById, create, update, remove };
+module.exports = { list, filters, getById, create, update, remove };
