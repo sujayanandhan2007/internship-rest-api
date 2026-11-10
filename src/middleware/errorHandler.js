@@ -1,3 +1,4 @@
+const logger = require('../utils/logger');
 const AppError = require('../utils/AppError');
 
 // Centralised error handler: always responds with the documented error envelope.
@@ -20,8 +21,6 @@ module.exports = (err, req, res, next) => {
     status = err.status; code = 'BAD_REQUEST'; message = 'Bad request';
   }
 
-  if (status === 500 && process.env.NODE_ENV !== 'test') {
-    console.error(`[error] ${req.method} ${req.path}: ${process.env.NODE_ENV === 'production' ? err.message : err.stack}`);
-  }
+  if (status >= 500) logger.error('request_failed', { method: req.method, path: req.path, status, code, errorName: err.name, sqliteCode: err.code && String(err.code).startsWith('SQLITE_') ? err.code : undefined });
   res.status(status).json({ status: 'error', error: { code, message, ...(details && { details }) } });
 };

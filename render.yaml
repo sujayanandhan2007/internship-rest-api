@@ -1,0 +1,23 @@
+# Render Blueprint. Persistent disks require a paid web service (verified against Render docs, 2026-11-10);
+# the free plan has an ephemeral filesystem, so SQLite data would be lost on every deploy/restart.
+services:
+  - type: web
+    name: internship-portal
+    runtime: node
+    plan: starter
+    buildCommand: npm ci --omit=dev && npm run init-db && npm run seed
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_PATH
+        value: /var/data/internships.db
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ADMIN_API_KEY
+        generateValue: true
+    disk:
+      name: internship-data
+      mountPath: /var/data
+      sizeGB: 1

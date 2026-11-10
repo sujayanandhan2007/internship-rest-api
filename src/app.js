@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const { rateLimit } = require('express-rate-limit');
 const internshipRoutes = require('./routes/internshipRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
+const healthRoutes = require('./routes/healthRoutes');
+const logger = require('./utils/logger');
 const AppError = require('./utils/AppError');
 const notFound = require('./middleware/notFound');
 const errorHandler = require('./middleware/errorHandler');
@@ -22,9 +24,10 @@ function createApp() {
   }));
 
   app.use((req, res, next) => {
-    if (process.env.NODE_ENV !== 'test') {
-      res.on('finish', () => console.log(`${req.method} ${req.path} ${res.statusCode}`)); // never logs bodies or queries
-    }
+    const start = process.hrtime.bigint();
+    res.on('finish', () => logger.info('http_request', {
+      method: req.method, path: req.path, status: res.statusCode, durationMs: Math.round(Number(process.hrtime.bigint() - start) / 1e6)
+    })); // never logs bodies, query strings or headers
     next();
   });
 
@@ -38,6 +41,7 @@ function createApp() {
   });
 
   app.use(express.json({ limit: process.env.BODY_LIMIT || '10kb' }));
+  app.use('/api/health', healthRoutes);
   app.use('/api/internships', internshipRoutes);
   app.use('/api/applications', applicationLimiter, applicationRoutes);
   app.use(express.static(path.join(__dirname, '..', 'public'))); // the Internship Board frontend
